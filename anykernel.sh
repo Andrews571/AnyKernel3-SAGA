@@ -58,6 +58,25 @@ else
     flash_boot
 fi
 
+# SAGA: install the late-boot schedutil-enforcement script, if this
+# build included it (kernel/addons/schedutil/'s Schedutil toggle) —
+# copies to /data/adb/service.d/ so it (re)installs automatically on
+# every flash, no manual step needed. Confirmed necessary on some
+# MediaTek SoCs where a vendor HAL sets a different governor once,
+# early in boot (see kernel/addons/schedutil/schedutil.sh in SAGA-Build
+# for the full writeup). /data isn't always mounted/writable here (e.g.
+# fastbootd) -- skip quietly rather than aborting the flash over it.
+if [ -f "service.d/99schedutil.sh" ]; then
+    if [ -d /data/adb ]; then
+        mkdir -p /data/adb/service.d
+        cp -f service.d/99schedutil.sh /data/adb/service.d/99schedutil.sh
+        chmod 755 /data/adb/service.d/99schedutil.sh
+        ui_print " " "SAGA: schedutil late-boot enforcement installed ✅"
+    else
+        ui_print " " "SAGA: schedutil script present but /data/adb not writable here — install manually if needed"
+    fi
+fi
+
 ui_print " "
 ui_print " "
 ui_print " "
